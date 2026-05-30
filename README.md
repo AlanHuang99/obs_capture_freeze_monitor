@@ -38,6 +38,14 @@ OBS_PASSWORD=your-websocket-password
 
 ## Usage
 
+### Download
+
+Release builds are published from tags and include `obs_capture_monitor_macos_service.zip` on the GitHub Releases page.
+
+```bash
+gh release download --pattern obs_capture_monitor_macos_service.zip
+```
+
 ### Manual Run
 
 Run the service manually:

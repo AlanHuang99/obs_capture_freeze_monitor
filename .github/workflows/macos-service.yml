@@ -5,7 +5,12 @@ on:
     branches:
       - main
       - codex/**
+    tags:
+      - v*
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -46,3 +51,13 @@ jobs:
         with:
           name: obs-capture-monitor-macos-service
           path: obs_capture_monitor_macos_service.zip
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" obs_capture_monitor_macos_service.zip \
+            --title "$GITHUB_REF_NAME" \
+            --notes "macOS service package for OBS Capture Freeze Monitor." \
+          || gh release upload "$GITHUB_REF_NAME" obs_capture_monitor_macos_service.zip --clobber
