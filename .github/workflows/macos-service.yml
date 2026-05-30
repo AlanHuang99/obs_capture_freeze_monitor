@@ -1,0 +1,48 @@
+name: macOS Service Build
+
+on:
+  push:
+    branches:
+      - main
+      - codex/**
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Validate and package service
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show Python version
+        run: python3 --version
+
+      - name: Compile monitor
+        run: python3 -m py_compile obs_capture_monitor_service.py
+
+      - name: Validate LaunchAgent plist
+        run: plutil -lint com.user.obs-capture-monitor.plist
+
+      - name: Validate service helper
+        run: bash -n setup_service.sh
+
+      - name: Build service package
+        run: |
+          mkdir -p dist/obs_capture_monitor
+          cp README.md \
+            com.user.obs-capture-monitor.plist \
+            obs_capture_monitor_service.py \
+            requirements.txt \
+            setup_service.sh \
+            dist/obs_capture_monitor/
+          chmod +x dist/obs_capture_monitor/obs_capture_monitor_service.py
+          chmod +x dist/obs_capture_monitor/setup_service.sh
+          ditto -c -k --keepParent dist/obs_capture_monitor obs_capture_monitor_macos_service.zip
+
+      - name: Upload service package
+        uses: actions/upload-artifact@v4
+        with:
+          name: obs-capture-monitor-macos-service
+          path: obs_capture_monitor_macos_service.zip

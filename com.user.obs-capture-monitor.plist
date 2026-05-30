@@ -7,35 +7,56 @@
     
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/jake/.pyenv/versions/3.12.4/bin/python3</string>
-        <string>/Users/jake/github/huevos-y-bacon/obs_display_monitor/obs_capture_monitor_service.py</string>
+        <string>/opt/homebrew/bin/python3</string>
+        <string>/Users/ahuang/Library/Application Support/obs_capture_monitor/obs_capture_monitor_service.py</string>
     </array>
     
     <key>RunAtLoad</key>
     <true/>
     
     <key>KeepAlive</key>
-    <true/>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
     
     <key>StandardOutPath</key>
-    <string>/var/log/obs_capture_monitor/obs_capture_monitor.log</string>
+    <string>/Users/ahuang/Library/Logs/obs_capture_monitor/service_output.log</string>
     
     <key>StandardErrorPath</key>
-    <string>/var/log/obs_capture_monitor/obs_capture_monitor_error.log</string>
+    <string>/Users/ahuang/Library/Logs/obs_capture_monitor/service_error.log</string>
     
     <key>WorkingDirectory</key>
-    <string>/Users/jake/github/huevos-y-bacon/obs_display_monitor</string>
+    <string>/Users/ahuang/Library/Application Support/obs_capture_monitor</string>
     
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
-        <string>/Users/jake/.pyenv/shims:/Users/jake/.pyenv/versions/3.12.4/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>OBS_MONITOR_LOG_DIR</key>
+        <string>/Users/ahuang/Library/Logs/obs_capture_monitor</string>
+        <key>OBS_HOST</key>
+        <string>192.168.1.166</string>
+        <key>OBS_PORT</key>
+        <string>4455</string>
+        <key>OBS_CHECK_INTERVAL</key>
+        <string>30</string>
+        <key>OBS_STUCK_THRESHOLD</key>
+        <string>6</string>
+        <key>OBS_RESTART_COOLDOWN</key>
+        <string>600</string>
+        <key>OBS_POLL_INTERVAL</key>
+        <string>30</string>
+        <key>OBS_REQUEST_TIMEOUT</key>
+        <string>8</string>
+        <key>OBS_CAPTURE_KIND_KEYWORDS</key>
+        <string>display,screen,macos</string>
     </dict>
     
     <key>ProcessType</key>
     <string>Background</string>
     
     <key>ThrottleInterval</key>
-    <integer>10</integer>
+    <integer>60</integer>
 </dict>
 </plist>

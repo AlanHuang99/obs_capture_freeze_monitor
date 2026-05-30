@@ -4,7 +4,7 @@ A Python service that automatically monitors and restarts frozen capture sources
 
 ## Features
 
-- **Automatic Detection**: Monitors all capture sources for frozen/stuck frames
+- **Automatic Detection**: Monitors macOS display/screen capture sources for frozen/stuck frames
 - **Smart Restart**: Automatically restarts frozen sources by toggling capture settings
 - **Background Service**: Runs continuously in the background on macOS
 - **Multi-Source Support**: Monitors all sources simultaneously with a single WebSocket connection
@@ -15,7 +15,7 @@ A Python service that automatically monitors and restarts frozen capture sources
 
 - Python 3.12+
 - OBS Studio with WebSocket plugin enabled - Tested with OBS Studio 31.0.3 (64 Bit) on Mac Sequoia 15.5 M3
-- `websocket-client` library
+- No third-party Python packages are required by the monitor service
 
 ## Installation
 
@@ -26,17 +26,15 @@ git clone <repository-url>
 cd obs_capture_freeze_monitor
 ```
 
-1. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
 1. Configure OBS WebSocket:
    - In OBS: Tools → WebSocket Server Settings
       - Enable server on port 4455
-      - Generate, copy and and 
-2. Set `PASSWORD` in the script
+      - Generate and copy the server password
+2. Put machine-local settings in `~/Library/Application Support/obs_capture_monitor/config.env`, for example:
+
+```bash
+OBS_PASSWORD=your-websocket-password
+```
 
 ## Usage
 
@@ -48,7 +46,7 @@ Run the service manually:
 python obs_capture_monitor_service.py
 ```
 
-This may fail due to missing log location - just follow the instructions.
+Logs are created under `~/Library/Logs/obs_capture_monitor`.
 
 ### Install as macOS Service (Recommended)
 
@@ -63,6 +61,8 @@ chmod +x setup_service.sh
 ```
 
 The service will now start automatically when you log in to macOS.
+
+The installer copies the runtime script to `~/Library/Application Support/obs_capture_monitor` before loading the LaunchAgent. This avoids macOS background-process privacy prompts around running scripts directly from `~/Documents`.
 
 ### Service Management
 
@@ -92,35 +92,43 @@ Use the setup script to manage the service:
 
 The service will:
 
-- Poll for OBS every 5 seconds when not running
-- Auto-discover and monitor all capture sources when OBS is detected
-- Log activity to `/var/log/obs_capture_monitor/obs_capture_monitor.log`
+- Poll for OBS every 30 seconds when OBS WebSocket is unavailable
+- Auto-discover display/screen capture sources when OBS is detected
+- Skip non-display inputs such as audio, image, media, browser, text, and scene sources
+- Restart a capture only after 6 unchanged checks at 30-second intervals
+- Wait at least 10 minutes before restarting the same capture again
+- Log activity to `~/Library/Logs/obs_capture_monitor/obs_capture_monitor.log`
 
 ## Configuration
 
-Edit the script constants to customize:
+Edit the LaunchAgent environment variables or script defaults to customize:
 
-- `HOST`: OBS WebSocket host (default: localhost)
-- `PORT`: OBS WebSocket port (default: 4455)
-- `PASSWORD`: WebSocket password
-- Monitor intervals and thresholds in the monitoring loop
+- `OBS_HOST`: OBS WebSocket host (default for this machine: `192.168.1.166`)
+- `OBS_PORT`: OBS WebSocket port (default: 4455)
+- `OBS_PASSWORD`: WebSocket password; keep it in `~/Library/Application Support/obs_capture_monitor/config.env` rather than committing it
+- `OBS_SOURCE_NAMES`: Optional comma-separated source allow-list
+- `OBS_CHECK_INTERVAL`: Seconds between screenshot checks (default: 30)
+- `OBS_STUCK_THRESHOLD`: Unchanged checks before restart (default: 6)
+- `OBS_RESTART_COOLDOWN`: Minimum seconds between restarts for the same source (default: 600)
+- `OBS_CAPTURE_KIND_KEYWORDS`: Auto-discovery keywords (default: `display,screen,macos`)
 
 ## Log Files
 
 When running as a service, logs are written to:
 
-- Standard output: `/var/log/obs_capture_monitor/obs_capture_monitor.log`
-- Error output: `/var/log/obs_capture_monitor/obs_capture_monitor_error.log`
+- Monitor log: `~/Library/Logs/obs_capture_monitor/obs_capture_monitor.log`
+- Standard output: `~/Library/Logs/obs_capture_monitor/service_output.log`
+- Error output: `~/Library/Logs/obs_capture_monitor/service_error.log`
 
 ## Troubleshooting
 
 ### Python Environment Issues
 
-If you see "websocket-client not installed" when running as a service, the Launch Agent may be using a different Python environment. The setup script automatically detects your Python path, but if issues persist:
+If the service does not start, make sure the LaunchAgent points at a valid Python binary. On this machine it is configured for `/opt/homebrew/bin/python3`.
 
 1. Check your Python path: `which python3`
-2. Ensure websocket-client is installed: `pip install websocket-client`
-3. Update the plist file to use the correct Python path if needed
+2. Update `com.user.obs-capture-monitor.plist` if needed
+3. Reinstall the service with `./setup_service.sh install`
 
 ## Credits
 
